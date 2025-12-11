@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+
+MODE="$1"
+
+LOC="$HOME/pics/screen/$(date +%Y-%m-%d)_$(date +%H%M%S).png"
+mkdir -p "$HOME/pics/screen"
+
+# SELECT MODE (default or -s)
+if [ -z "$MODE" ] || [ "$MODE" = "-s" ] || [ "$MODE" = "--select" ]; then
+    if command -v slurp >/dev/null; then
+        grim -g "$(slurp)" "$LOC"
+    else
+        grim "$LOC"
+    fi
+    wl-copy < "$LOC"
+    notify-send "Screenshot saved" "$LOC"
+
+# FULLSCREEN MODE
+elif [ "$MODE" = "-f" ] || [ "$MODE" = "--full" ]; then
+    grim "$LOC"
+    wl-copy < "$LOC"
+    notify-send "Screenshot saved" "$LOC"
+
+# COLOR PICKER MODE
+elif [ "$MODE" = "-c" ] || [ "$MODE" = "--color" ]; then
+    COLOR=$(hyprpicker)
+    printf "%s" "$COLOR" | wl-copy
+    notify-send "Color picked" "Copied: $COLOR"
+
+# INVALID OPTION
+else
+    notify-send "Invalid option." "Valid flags: -f, -s, -c" # FSoCiety
+    exit 1
+fi
+

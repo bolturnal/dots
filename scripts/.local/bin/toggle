@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+target="$1"
+
+if [ -z "$target" ]; then
+    exit 1
+fi
+
+if pgrep "$target" > /dev/null; then
+    pkill "$target"
+else
+    "$target" &
+fi
+

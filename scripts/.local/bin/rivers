@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+
+options="lock\nrestart\nshutdown\nlogout"
+
+selected=$(echo -e "$options" | rofi -dmenu -i -p "Power Menu" -theme-str 'window {width: 250px; height: 250px;}')
+
+case "$selected" in
+    lock)
+        hyprlock ;;
+    restart)
+        systemctl reboot ;;
+    shutdown)
+        systemctl poweroff ;;
+    logout)
+        hyprctl dispatch exit ;;
+esac
+

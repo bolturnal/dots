@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+target="$1" 
+
+if [ -z "$target" ]; then
+    exit 1
+fi
+
+# target identified -- nine inch nails [now playing]
+pkill "$target"
+"$target" &
+

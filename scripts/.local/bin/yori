@@ -1,0 +1,99 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+  cat <<'EOF'
+Usage: yori <URL> [options]
+  --music             Audio mode: MP3 with basic tags
+  --video             Video mode (default)
+  --quality <res>     Video resolution (default: best, e.g., 1080, 720, 480)
+  -o, --output <dir>  Output directory (default: current)
+EOF
+  exit 1
+}
+
+die() { echo "ERROR: $*" >&2; exit 1; }
+
+# Convert filename to camelCase
+to_camel_case() {
+  local input="$1"
+  local ext="${input##*.}"
+  local base="${input%.*}"
+  
+  # removes special chars, convert to camelCase
+  local result=$(echo "$base" | \
+    sed 's/[^a-zA-Z0-9 ]//g' | \
+    awk '{for(i=1;i<=NF;i++){if(i==1){printf tolower(substr($i,1,1))substr($i,2)} else {printf toupper(substr($i,1,1))substr($i,2)}}} END {print ""}')
+  
+  echo "${result}.${ext}"
+}
+
+# the usuals
+MODE="video"
+QUALITY="best"
+OUTDIR="."
+
+URL=""
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --music) MODE="music"; shift ;;
+    --video) MODE="video"; shift ;;
+    --quality) QUALITY="$2"; shift 2 ;;
+    -o|--output) OUTDIR="$2"; shift 2 ;;
+    -*) die "Unknown option: $1" ;;
+    *) URL="$1"; shift ;;
+  esac
+done
+
+[[ -z "$URL" ]] && usage
+mkdir -p "$OUTDIR" && cd "$OUTDIR"
+
+for cmd in yt-dlp ffmpeg; do
+  command -v "$cmd" &>/dev/null || die "Missing: $cmd"
+done
+
+# ─────────────────────────────────────────────────────────────────────
+# VIDEO MODE (default)
+# ─────────────────────────────────────────────────────────────────────
+if [[ "$MODE" == "video" ]]; then
+  if [[ "$QUALITY" == "best" ]]; then
+    FORMAT="bestvideo+bestaudio/best"
+  else
+    FORMAT="bestvideo[height<=${QUALITY}]+bestaudio/best[height<=${QUALITY}]/best"
+  fi
+  
+  yt-dlp --no-playlist \
+         --cookies ~/cookies.txt \
+         -f "$FORMAT" \
+         --merge-output-format mp4 \
+         -o "%(title)s.%(ext)s" \
+         "$URL"
+  
+  FILE=$(ls -t *.mp4 2>/dev/null | head -n1)
+  [[ -z "$FILE" ]] && die "Video not found"
+  
+  CAMEL=$(to_camel_case "$FILE")
+  mv "$FILE" "$CAMEL"
+  echo "Done: $CAMEL"
+  exit 0
+fi
+
+# ─────────────────────────────────────────────────────────────────────
+# MUSIC MODE
+# ─────────────────────────────────────────────────────────────────────
+yt-dlp --no-playlist \
+       --cookies ~/cookies.txt \
+       -f "bestaudio" -x --audio-format mp3 --audio-quality 0 \
+       --embed-metadata \
+       --parse-metadata "title:%(title)s" \
+       --parse-metadata "uploader:%(artist)s" \
+       -o "%(title)s.%(ext)s" \
+       "$URL" || die "Download failed"
+
+FILE=$(ls -t *.mp3 2>/dev/null | head -n1)
+[[ -z "$FILE" ]] && die "MP3 not found"
+
+CAMEL=$(to_camel_case "$FILE")
+mv "$FILE" "$CAMEL"
+echo "Done: $CAMEL"
+

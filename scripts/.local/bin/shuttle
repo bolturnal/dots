@@ -1,0 +1,28 @@
+#!/usr/bin/env python3
+
+"""
+Shuttle is just the name of my digital journal!
+"""
+
+import subprocess
+import os
+from datetime import datetime
+from pathlib import Path
+
+__version__ = "v0.4"
+
+now = datetime.now()
+
+year = str(now.year)[2:]  # Might not survive Y3K... and with my lifestyle... I might not either!!!
+month = now.strftime("%m").lower()  # i'm right... right?
+date = now.strftime("%d")
+
+path = Path.home() / "docs" / "notes" / "shuttle"
+path.mkdir(parents=True, exist_ok=True)
+os.chdir(path)
+
+editor: str = "nvim"  # use code... I just hate it... I'm sorry!!!
+ext: str = "md"  # markdown
+today: Path = path / f"{year}-{month}-{date}.{ext}"
+
+subprocess.run([editor, str(today)], check=False)

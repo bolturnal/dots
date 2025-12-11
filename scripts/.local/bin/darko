@@ -1,0 +1,105 @@
+#!/usr/bin/env python3
+
+"""
+Donnie Darko...
+
+Usage:
+    darko                -> toggle between 0% and last brightness
+    darko get            -> returns current brightness
+    darko <value>        -> set brightness to <value>% (0–100)
+    darko <value> up     -> increase brightness by <value>%
+    darko <value> down   -> decrease brightness by <value>%
+"""
+
+import subprocess
+import sys
+from pathlib import Path
+
+__version__ = "v1.2"
+
+CACHE = Path.home() / ".cache" / "darko.txt"
+CACHE.parent.mkdir(parents=True, exist_ok=True)
+
+# brightnessctl uses 1% = 960
+STEP = 960
+MAX = STEP * 100
+
+
+def bctl(args):
+    return subprocess.run(args, capture_output=True, check=True, text=True)
+
+
+def convert(value, *, to="percent"):
+    if to == "percent":
+        return float(value) / STEP
+    else:
+        return float(value) * STEP
+
+
+def getBrightness():
+    out = bctl(["brightnessctl", "get"])
+    raw = float(out.stdout.strip())
+    return max(0.0, min(100.0, convert(raw, to="percent")))
+
+
+def change(percent):
+    percent = max(0.0, min(100.0, float(percent)))
+    raw = convert(percent, to="raw")
+    bctl(["brightnessctl", "set", str(raw)])
+
+
+def loadCache():
+    if CACHE.exists():
+        try:
+            return float(CACHE.read_text().strip())
+        except ValueError:
+            pass
+    return 36.0
+
+
+def toggle():
+    current = getBrightness()
+    if current > 0.0:
+        CACHE.write_text(str(current))
+        change(0)
+    else:
+        change(loadCache())
+
+
+def adjust(delta, sign):
+    current = getBrightness()
+    delta = float(delta)
+
+    if sign == "up":
+        change(current + delta)
+    elif sign == "down":
+        change(current - delta)
+    else:
+        print("Usage: darko <value> [up|down]")
+
+
+def main():
+    if len(sys.argv) == 1:
+        toggle()
+        return
+
+    try:
+        value = float(sys.argv[1])
+    except ValueError:
+        if sys.argv[1] == "get":
+            print(getBrightness())
+            return
+        print("Value must be a number.")
+        return
+
+    if len(sys.argv) == 2:
+        change(value)
+        return
+
+    sign = sys.argv[2].lower()
+    adjust(value, sign)
+
+
+if __name__ == "__main__":
+    main()
+
