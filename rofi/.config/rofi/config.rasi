@@ -1,0 +1,11 @@
+@theme "/dev/null"
+@theme "theme.rasi"
+
+configuration {
+    font: "GoMono Nerd Font 12";
+    show-icons: true;
+    enable-history: true;
+    width: 50%;
+    fixed-num-lines: false;
+}
+

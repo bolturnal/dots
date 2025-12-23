@@ -1,0 +1,67 @@
+* {
+    background:   #0a0e14;
+    foreground:   #bfefff;
+    border-color: #00f0ff;
+    selected-bg:  rgba(138, 43, 226, 0.15);
+    selected-border: #8a2be2;
+}
+
+window {
+    background-color: @background;
+    border: 2px;
+    border-color: @border-color;
+    border-radius: 10px;
+    padding: 10px;
+}
+
+mainbox {
+    background-color: transparent;
+}
+
+inputbar {
+    background-color: rgba(10, 25, 40, 0.8);
+    border: 1px;
+    border-color: #00d7ff;
+    border-radius: 8px;
+    padding: 8px;
+    children: [ entry ];
+}
+
+entry {
+    text-color: #e6fbff;
+    background-color: transparent;
+}
+
+listview {
+    lines: 10;
+    fixed-height: false;
+    spacing: 6px;
+    background-color: transparent;
+}
+
+element {
+    padding: 8px;
+    background-color: transparent;
+    border-radius: 6px;
+}
+
+element selected.normal {
+    background-color: @selected-bg;
+    border: 0px 0px 0px 4px;
+    border-color: @selected-border;
+}
+
+element-text {
+    text-color: @foreground;
+    background-color: transparent;
+}
+
+element-text selected.normal {
+    text-color: #ffffff;
+}
+
+element-icon {
+    size: 20px;
+    background-color: transparent;
+}
+
